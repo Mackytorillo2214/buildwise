@@ -4,7 +4,13 @@
   const configured = cfg.SUPABASE_URL && !cfg.SUPABASE_URL.startsWith("YOUR_") && window.supabase;
   /* keep only https://<project>.supabase.co, even if extra path or a trailing slash was pasted */
   const baseUrl = configured ? (() => { try { return new URL(cfg.SUPABASE_URL.trim()).origin; } catch (e) { return cfg.SUPABASE_URL.trim(); } })() : "";
-  const db = configured ? window.supabase.createClient(baseUrl, cfg.SUPABASE_ANON_KEY.trim()) : null;
+  /* "Remember me": keep the sign-in in localStorage (stays after closing the browser) or in sessionStorage (ends when the tab or browser closes) */
+  const bwStore = {
+    getItem(k) { try { const v = localStorage.getItem(k); return v !== null ? v : sessionStorage.getItem(k); } catch (e) { return null; } },
+    setItem(k, v) { try { const keep = localStorage.getItem("bw_remember") !== "0"; (keep ? localStorage : sessionStorage).setItem(k, v); (keep ? sessionStorage : localStorage).removeItem(k); } catch (e) {} },
+    removeItem(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} }
+  };
+  const db = configured ? window.supabase.createClient(baseUrl, cfg.SUPABASE_ANON_KEY.trim(), { auth: { storage: bwStore, persistSession: true, autoRefreshToken: true } }) : null;
   const $ = id => document.getElementById(id);
   const ROLE_NAME = { client: "Client", contractor: "Foreman / Contractor" };
 
@@ -23,7 +29,7 @@
     const signup = mode === "signup";
     $("nameRow").hidden = !signup;
     $("companyRow").hidden = !(signup && role === "contractor");
-    $("forgot").hidden = signup;
+    $("signRow").hidden = signup;
     $("submit").textContent = signup ? "Create " + (role === "client" ? "client" : "contractor") + " account" : "Sign in as " + (role === "client" ? "client" : "foreman / contractor");
     $("password").autocomplete = signup ? "new-password" : "current-password";
     $("roleNote").textContent = role === "client"
@@ -80,10 +86,12 @@
     busy(true); say("");
     try {
       if (mode === "signin") {
+        try { localStorage.setItem("bw_remember", $("remember") && !$("remember").checked ? "0" : "1"); } catch (e) {}
         const { data, error } = await db.auth.signInWithPassword({ email, password });
         if (error) throw error;
         await enter(data.user);
       } else {
+        try { localStorage.setItem("bw_remember", "1"); } catch (e) {}
         const { data, error } = await db.auth.signUp({
           email, password,
           options: { data: { full_name: $("fullName").value.trim(), role, company: $("company").value.trim() }, emailRedirectTo: location.href }
