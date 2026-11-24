@@ -3335,8 +3335,8 @@ function payPanelHTML() {
         <select id="payMode"><option value="percent" ${p.feeMode === "percent" ? "selected" : ""}>Percent of cost</option><option value="fixed" ${p.feeMode === "fixed" ? "selected" : ""}>Fixed amount</option></select></label>
       <label class="pay-f"><span>${p.feeMode === "fixed" ? "Fee (₱)" : "Fee (%)"}</span>
         <input type="number" min="0" ${p.feeMode === "fixed" ? 'step="1000"' : 'step="0.5" max="100"'} id="payFee" value="${p.feeMode === "fixed" ? p.feeFixed : p.feePct}"></label>
-      <label class="pay-chk"><input type="checkbox" id="payShow" ${p.showFee ? "checked" : ""}> Show the fee to the client</label></div>
-      <p class="hint">Usually about 10–20% of materials + labor + permits. This is a guide only, so set your own rate. Your default comes from your account.</p>`;
+</div>
+      <p class="hint">Usually about 10–20% of materials + labor + permits. This is a guide only. Clients can see this rate, and a contractor's usual rate is also on their profile.</p>`;
   }
   return `<div class="pay-cards" role="radiogroup" aria-label="How is the job paid?">${cards}</div>${opts}<div class="card pay-live" id="payLive">${payLiveHTML()}</div>`;
 }
@@ -3353,7 +3353,6 @@ function bindPay() {
   const fx = $("payFixed"); if (fx) fx.addEventListener("input", () => { const v = num$("payFixed"); S.pay.pakyawan = v >= 0 ? v : null; live(); });
   const md = $("payMode"); if (md) md.addEventListener("change", () => { S.pay.feeMode = md.value; box.innerHTML = payPanelHTML(); bindPay(); liveUpdate(); });
   const fe = $("payFee"); if (fe) fe.addEventListener("input", () => { const v = num$("payFee"); if (S.pay.feeMode === "fixed") S.pay.feeFixed = v >= 0 ? v : 0; else S.pay.feePct = v >= 0 ? Math.min(100, v) : 0; live(); });
-  const sh = $("payShow"); if (sh) sh.addEventListener("change", () => { S.pay.showFee = sh.checked; liveUpdate(); });
 }
 
 /* =========================
