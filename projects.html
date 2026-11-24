@@ -69,6 +69,7 @@
       <label for="pPro"><span>Connect a contractor <em>(optional)</em></span></label>
       <input type="text" id="pPro" role="combobox" aria-expanded="false" aria-controls="proList" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search a foreman or company name">
       <ul id="proList" class="plist" role="listbox" hidden></ul>
+      <div id="proCard" hidden></div>
     </div>
     <p class="note" style="margin-bottom:12px" id="dNote"></p>
     <p class="msg err" id="dErr" hidden></p>
@@ -77,5 +78,5 @@
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="supabase-config.js"></script><script src="bw-data.js"></script><script src="projects.js"></script><script src="nav.js"></script>
+<script src="supabase-config.js"></script><script src="bw-data.js"></script><script src="contractor-card.js"></script><script src="projects.js"></script><script src="nav.js"></script>
 </body></html>
