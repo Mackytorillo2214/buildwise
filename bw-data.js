@@ -141,6 +141,42 @@ window.BW = (function () {
   const isOwner = (user, p) => ownerOf(p) === user.id;
   const canPost = (user, p) => p.contractor_id ? p.contractor_id === user.id : ownerOf(p) === user.id;
 
+  /* once work has started with a contractor connected, the client's plan edits become change requests */
+  const isStarted = p => !!(p.started_at || (p.progress || 0) > 0);
+  const planLocked = (user, p) => !!(p.contractor_id && p.contractor_id !== user.id && isOwner(user, p) && isStarted(p));
+
+  /* ---------- change requests ---------- */
+  async function listChangeRequests(id) {
+    if (!db) { const d = store(); return (d.changes || []).filter(c => c.project_id === id).sort((a, b) => b.created_at.localeCompare(a.created_at)); }
+    const { data, error } = await db.from("change_requests").select("*").eq("project_id", id).order("created_at", { ascending: false });
+    if (error) throw error; return data || [];
+  }
+  async function sendChangeRequest(user, id, { note, plan, total, budget, oldTotal }) {
+    if (!db) {
+      const d = store(); d.changes = d.changes || [];
+      d.changes.forEach(c => { if (c.project_id === id && c.status === "pending") c.status = "cancelled"; });
+      d.changes.push({ id: uid(), project_id: id, requested_by: user.id, requester_name: user.name, note, plan_data: plan, plan_total: total, budget, old_total: oldTotal, status: "pending", reply: null, created_at: new Date().toISOString() });
+      save(d); return;
+    }
+    const old = await db.from("change_requests").update({ status: "cancelled" }).eq("project_id", id).eq("status", "pending");
+    if (old.error) throw old.error;
+    const { error } = await db.from("change_requests").insert({ project_id: id, requested_by: user.id, requester_name: user.name, note, plan_data: plan, plan_total: total, budget, old_total: oldTotal });
+    if (error) throw error;
+  }
+  async function cancelChangeRequest(rid) {
+    if (!db) { const d = store(); const c = (d.changes || []).find(x => x.id === rid); if (c && c.status === "pending") c.status = "cancelled"; save(d); return; }
+    const { error } = await db.from("change_requests").update({ status: "cancelled" }).eq("id", rid).eq("status", "pending"); if (error) throw error;
+  }
+  async function decideChangeRequest(rid, approve, reply) {
+    if (!db) {
+      const d = store(); const c = (d.changes || []).find(x => x.id === rid); if (!c || c.status !== "pending") return;
+      c.status = approve ? "approved" : "declined"; c.reply = reply || null; c.decided_at = new Date().toISOString();
+      if (approve) { const p = d.projects.find(x => x.id === c.project_id); if (p) { p.plan_data = c.plan_data; p.plan_total = c.plan_total; p.budget = c.budget; } }
+      save(d); return;
+    }
+    const { error } = await db.rpc("decide_change_request", { rid, approve, reply: reply || null }); if (error) throw error;
+  }
+
   async function getProject(id) {
     if (!db) return store().projects.find(p => p.id === id) || null;
     const { data, error } = await db.from("projects").select("*").eq("id", id).maybeSingle();
@@ -215,5 +251,5 @@ window.BW = (function () {
     return data;
   }
 
-  return { db, configured: !!db, STAGES, stageOf, shownName, me, proLabel, saveProfile, signOut, listProjects, lastUpdates, createProject, uploadReference, uploadUpdatePhoto, referenceUrl, connectContractor, searchContractors, contractorProfile, isOwner, canPost, searchClients, getProject, savePlan, deleteProject, listUpdates, addUpdate, updateProject };
+  return { db, configured: !!db, STAGES, stageOf, shownName, me, proLabel, saveProfile, signOut, listProjects, lastUpdates, createProject, uploadReference, uploadUpdatePhoto, referenceUrl, connectContractor, searchContractors, contractorProfile, isStarted, planLocked, listChangeRequests, sendChangeRequest, cancelChangeRequest, decideChangeRequest, isOwner, canPost, searchClients, getProject, savePlan, deleteProject, listUpdates, addUpdate, updateProject };
 })();
