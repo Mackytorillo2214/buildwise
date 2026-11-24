@@ -53,6 +53,7 @@ window.BW = (function () {
     if (!db) {
       const role = sessionStorage.getItem("buildwise_preview_role");
       if (!role) { location.href = "login.html"; return new Promise(() => {}); }
+      try { localStorage.setItem("bw_role", role); } catch (e) {}
       let pr = {}; try { pr = JSON.parse(localStorage.getItem("bw_preview_profile") || "{}"); } catch (e) {}
       return { id: "preview-" + role, email: "preview@buildwise.example.com", name: pr.name || (role === "client" ? "Preview Client" : "Preview Foreman"), role, preview: true, proType: role === "contractor" ? (pr.proType || null) : null, company: pr.company || "", defaultFee: pr.defaultFee != null ? pr.defaultFee : null };
     }
@@ -65,7 +66,7 @@ window.BW = (function () {
     const proType = p.role === "contractor" && (md.pro_type === "foreman" || md.pro_type === "contractor") ? md.pro_type : null;
     const defaultFee = md.default_fee != null && md.default_fee !== "" ? Number(md.default_fee) : null;
     /* the planner reads these two to choose its starting pay type and fee */
-    try { if (proType) localStorage.setItem("bw_pro_type", proType); else localStorage.removeItem("bw_pro_type"); if (defaultFee != null) localStorage.setItem("bw_default_fee", String(defaultFee)); } catch (e) {}
+    try { localStorage.setItem("bw_role", p.role); if (proType) localStorage.setItem("bw_pro_type", proType); else localStorage.removeItem("bw_pro_type"); if (defaultFee != null) localStorage.setItem("bw_default_fee", String(defaultFee)); } catch (e) {}
     return { id: u.id, email: u.email, name: p.full_name || shownName(u.email), role: p.role, preview: false, proType, company: md.company || "", defaultFee };
   }
   const proLabel = user => (user && user.proType === "foreman" ? "FOREMAN" : user && user.proType === "contractor" ? "CONTRACTOR" : "FOREMAN / CONTRACTOR");
@@ -86,7 +87,7 @@ window.BW = (function () {
   }
   async function signOut() {
     if (db) await db.auth.signOut();
-    try { sessionStorage.removeItem("buildwise_preview_role"); localStorage.removeItem("bw_pro_type"); } catch (e) {}
+    try { sessionStorage.removeItem("buildwise_preview_role"); localStorage.removeItem("bw_pro_type"); localStorage.removeItem("bw_role"); } catch (e) {}
     location.href = "login.html";
   }
 
@@ -120,6 +121,20 @@ window.BW = (function () {
       .filter(c => !q || c.full_name.toLowerCase().includes(q) || c.company.toLowerCase().includes(q));
     const { data, error } = await db.rpc("search_contractors", { q });
     if (error) throw error; return data || [];
+  }
+  /* a contractor's public profile: usual fee rate and project record */
+  async function contractorProfile(id) {
+    if (!id) return null;
+    if (!db) {
+      const known = { "preview-contractor": { full_name: "Foreman Reyes", company: "Reyes Builders", pro_type: "foreman", default_fee: (() => { try { const v = parseFloat(localStorage.getItem("bw_default_fee")); return v >= 0 ? v : 10; } catch (e) { return 10; } })() },
+        c2: { full_name: "Jun Mercado", company: "JM Construction", pro_type: "contractor", default_fee: 12 }, c3: { full_name: "Joel Bautista", company: "Bautista & Sons", pro_type: "contractor", default_fee: 15 } };
+      const k = known[id] || { full_name: "Contractor", company: "", pro_type: "contractor", default_fee: null };
+      const mine = (store().projects || []).filter(p => p.contractor_id === id);
+      const done = mine.filter(p => (p.progress || 0) >= 100).length;
+      return { id, ...k, total: mine.length, completed: done, ongoing: mine.length - done, avg_progress: mine.length ? Math.round(mine.reduce((a, p) => a + (p.progress || 0), 0) / mine.length) : 0, since: null };
+    }
+    const { data, error } = await db.rpc("contractor_profile", { cid: id });
+    if (error) throw error; return data;
   }
   /* who may do what on a project */
   const ownerOf = p => p.created_by || p.contractor_id || "preview-contractor";
@@ -200,5 +215,5 @@ window.BW = (function () {
     return data;
   }
 
-  return { db, configured: !!db, STAGES, stageOf, shownName, me, proLabel, saveProfile, signOut, listProjects, lastUpdates, createProject, uploadReference, uploadUpdatePhoto, referenceUrl, connectContractor, searchContractors, isOwner, canPost, searchClients, getProject, savePlan, deleteProject, listUpdates, addUpdate, updateProject };
+  return { db, configured: !!db, STAGES, stageOf, shownName, me, proLabel, saveProfile, signOut, listProjects, lastUpdates, createProject, uploadReference, uploadUpdatePhoto, referenceUrl, connectContractor, searchContractors, contractorProfile, isOwner, canPost, searchClients, getProject, savePlan, deleteProject, listUpdates, addUpdate, updateProject };
 })();
