@@ -55,7 +55,7 @@
     const rowsP = (project.payments && project.payments.rows) || [], hasP = rowsP.length > 0;
     const recPct = rowsP.filter(r => r.status === "received").reduce((a, r) => a + r.pct, 0), sentPct = rowsP.filter(r => r.status === "sent").reduce((a, r) => a + r.pct, 0);
     const cov = n => n * recPct / 100, pe = n => "₱" + Math.round(n || 0).toLocaleString("en-PH");
-    const type = m.payType || "arawan", hideFee = type === "contractor" && m.showFee === false && !isPro;
+    const type = m.payType || "arawan", hideFee = false;   /* clients can see the contractor's fee and rate */
     const feeLine = type === "contractor" && !hideFee ? m.fee : 0;
     const labor = type === "contractor" && hideFee ? m.labor + m.fee : m.labor;
     const cols = hasP ? 4 : 3;
@@ -168,14 +168,15 @@
       ? "Connected to " + project.contractor_name + ". Pick someone else to change it."
       : "Not connected yet. Pick a contractor and they will see your saved plan and post progress updates. Without one, you track progress yourself.";
     let chosen = null;
+    if (project.contractor_id) ContractorCard.show($("proCard2"), project.contractor_id);
     const input = $("pPro2"), list = $("proList2");
     let items = [], t = 0;
     const paint = q => { list.innerHTML = items.length ? items.map((c, i) => `<li role="option" data-i="${i}"><b>${esc(c.full_name || "Contractor")}</b><small>${esc(c.company || "No company name")}</small></li>`).join("") : `<li class="none">No match${q ? " for “" + esc(q) + "”" : ""}.</li>`; list.hidden = false; };
     const look = async () => { const q = input.value.trim(); try { items = await BW.searchContractors(q); } catch (e) { items = []; } paint(q); };
-    input.addEventListener("input", () => { chosen = null; $("cGo").disabled = true; clearTimeout(t); t = setTimeout(look, 150); });
+    input.addEventListener("input", () => { chosen = null; $("cGo").disabled = true; ContractorCard.show($("proCard2"), project.contractor_id || null); clearTimeout(t); t = setTimeout(look, 150); });
     input.addEventListener("focus", look);
     input.addEventListener("blur", () => setTimeout(() => { list.hidden = true; }, 150));
-    list.addEventListener("mousedown", e => { const li = e.target.closest("[data-i]"); if (!li) return; e.preventDefault(); chosen = items[Number(li.dataset.i)]; input.value = chosen.full_name || ""; list.hidden = true; $("cGo").disabled = false; });
+    list.addEventListener("mousedown", e => { const li = e.target.closest("[data-i]"); if (!li) return; e.preventDefault(); chosen = items[Number(li.dataset.i)]; input.value = chosen.full_name || ""; list.hidden = true; $("cGo").disabled = false; ContractorCard.show($("proCard2"), chosen.id); });
     if (project.contractor_name) $("cGo").textContent = "Change contractor";
     /* warn before swapping the contractor of a project that already has one */
     const confirmChange = (from, to) => new Promise(ok => {
