@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Projects · BuildWise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css"></head>
+<body>
+<div class="shell">
+<aside class="side" id="side" aria-label="Main navigation">
+  <a class="brand" href="projects.html"><span class="logo">⌂</span><strong>BuildWise</strong></a>
+  <nav class="snav">
+    <a href="projects.html#dashboard" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+    <a href="projects.html#list" class=""><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg>My projects</a>
+    
+    <button type="button" id="sideNew"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>New project</button>
+  </nav>
+  <div class="sfoot"><div class="suser"><b id="who">…</b><small id="whoMail"></small></div><span class="role-tag" id="roleTag"></span><button class="sout" id="out"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button></div>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+<div class="main">
+<header class="top">
+  <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <span class="tcrumb" id="tcrumb">Dashboard</span>
+</header>
+<main class="wrap">
+  <div id="previewBanner" class="banner" hidden><b>Preview mode.</b> Supabase isn't connected, so projects are saved only in this browser. Add your keys in <code>supabase-config.js</code> for real data.</div>
+  <div class="head">
+    <div><span class="crumb" id="crumb">PROJECTS</span><h1 id="title">Your projects</h1><p class="sub" id="sub"></p></div>
+    <button class="go" id="newBtn">+ New project</button>
+  </div>
+  <p id="err" class="msg err" hidden></p>
+
+  <!-- Dashboard: the overview. Numbers, what needs attention, and what just happened -->
+  <div id="vDash" hidden>
+    <section class="stats" id="stats" aria-label="Overview" hidden></section>
+    <div class="dgrid">
+      <section class="plate dcard dwide" aria-labelledby="hAct"><h3 id="hAct">Latest updates</h3><ul class="act" id="actList"></ul></section>
+      <div class="dcol">
+        <section class="plate dcard" aria-labelledby="hAttn"><h3 id="hAttn">Needs attention</h3><ul class="attn" id="attnList"></ul></section>
+        <section class="plate dcard" aria-labelledby="hStage"><h3 id="hStage">Projects by stage</h3><div class="sbars" id="stageBars"></div></section>
+      </div>
+    </div>
+  </div>
+
+  <!-- My projects: every project, searchable -->
+  <div id="vList" hidden>
+    <div class="toolbar">
+      <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="q" placeholder="Search name, location or person" aria-label="Search projects" autocomplete="off"></label>
+      <div class="segs" role="group" aria-label="Filter by status"><button type="button" class="seg on" data-f="all" aria-pressed="true">All</button><button type="button" class="seg" data-f="ongoing" aria-pressed="false">Ongoing</button><button type="button" class="seg" data-f="done" aria-pressed="false">Completed</button></div>
+      <label class="sortsel"><span>Sort</span><select id="sortBy" aria-label="Sort projects"><option value="new">Newest</option><option value="activity">Latest activity</option><option value="progress">Progress</option><option value="name">Name A–Z</option></select></label>
+    </div>
+    <p class="lcount" id="lcount" aria-live="polite"></p>
+    <section id="list" class="grid" aria-live="polite"></section>
+  </div>
+</main>
+</div></div>
+
+<dialog id="dlg">
+  <form method="dialog" id="newForm">
+    <h3>New project</h3>
+    <label class="f"><span>Project name</span><input type="text" id="pName" placeholder="Dela Cruz Residence" required maxlength="80"></label>
+    <label class="f"><span>Location <em>(optional)</em></span><input type="text" id="pLoc" placeholder="Lipa, Batangas" maxlength="120"></label>
+    <div class="f combo" id="clientBlock" hidden>
+      <label for="pClient"><span>Client <em>(optional)</em></span></label>
+      <input type="text" id="pClient" role="combobox" aria-expanded="false" aria-controls="clientList" aria-autocomplete="list" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Start typing a name, username or email">
+      <ul id="clientList" class="plist" role="listbox" hidden></ul>
+    </div>
+    <div class="f combo" id="proBlock" hidden>
+      <label for="pPro"><span>Connect a contractor <em>(optional)</em></span></label>
+      <input type="text" id="pPro" role="combobox" aria-expanded="false" aria-controls="proList" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search a foreman or company name">
+      <ul id="proList" class="plist" role="listbox" hidden></ul>
+    </div>
+    <p class="note" style="margin-bottom:12px" id="dNote"></p>
+    <p class="msg err" id="dErr" hidden></p>
+    <div class="row"><button type="button" class="ghost" id="dCancel">Cancel</button><button type="submit" class="go" id="dGo">Create and plan</button></div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script><script src="bw-data.js"></script><script src="projects.js"></script><script src="nav.js"></script>
+</body></html>

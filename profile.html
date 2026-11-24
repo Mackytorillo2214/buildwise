@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My profile · BuildWise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css"></head>
+<body>
+<div class="shell">
+<aside class="side" id="side" aria-label="Main navigation">
+  <a class="brand" href="projects.html"><span class="logo">⌂</span><strong>BuildWise</strong></a>
+  <nav class="snav">
+    <a href="projects.html#dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+    <a href="projects.html#list" class=""><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg>My projects</a>
+    
+    <button type="button" id="sideNew"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>New project</button>
+  </nav>
+  <div class="sfoot"><div class="suser"><b id="who">…</b><small id="whoMail"></small></div><span class="role-tag" id="roleTag"></span><button class="sout" id="out"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button></div>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+<div class="main">
+<header class="top">
+  <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <span class="tcrumb" id="tcrumb">My profile</span>
+</header>
+<main class="wrap">
+  <div id="previewBanner" class="banner" hidden><b>Preview mode.</b> Your profile is saved only in this browser.</div>
+  <div class="head"><div><a class="crumb" href="projects.html">← ALL PROJECTS</a><h1>My profile</h1><p class="sub" id="sub"></p></div></div>
+  <p id="err" class="msg err" hidden></p>
+  <section class="plate" style="max-width:640px">
+    <form id="pf">
+      <label class="f"><span>Full name</span><input type="text" id="pName" maxlength="60" required></label>
+      <label class="f"><span>Email or username</span><input type="text" id="pMail" disabled></label>
+      <label class="f"><span>Account type</span><input type="text" id="pRole" disabled></label>
+      <div id="proOnly" hidden>
+        <div class="f"><span>I work as a</span>
+          <div class="pt-cards" role="radiogroup" aria-label="I work as a">
+            <button type="button" class="pt-card" data-pt="foreman" role="radio" aria-checked="false"><strong>Foreman</strong><small>I lead the crew and mostly get paid for labor (pakyawan or arawan). The owner often buys the materials.</small></button>
+            <button type="button" class="pt-card" data-pt="contractor" role="radio" aria-checked="false"><strong>Contractor</strong><small>I handle materials and labor together, take the risk, and charge a contractor's fee.</small></button>
+          </div>
+        </div>
+        <label class="f"><span>Company or crew name <em>(optional)</em></span><input type="text" id="pCompany" maxlength="60" placeholder="JDC Construction"></label>
+        <label class="f" id="feeBox" hidden><span>Your usual contractor's fee, %</span><input type="number" id="pFee" min="0" max="100" step="0.5" placeholder="10"><small class="note">Used as the starting fee for new plans. You can change it on each project.</small></label>
+      </div>
+      <p class="msg err" id="pErr" hidden></p><p class="msg ok" id="pOk" hidden></p>
+      <button class="go" id="pSave" type="submit">Save profile</button>
+    </form>
+  </section>
+</main>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script><script src="bw-data.js"></script><script src="profile.js"></script><script src="nav.js"></script>
+</body></html>

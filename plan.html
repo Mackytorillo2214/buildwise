@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>House plan · BuildWise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<style>
+.stat4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat4 div{background:var(--plate-2);border:1px solid var(--rule);border-radius:12px;padding:12px 14px}
+.stat4 small{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--cyan)}
+.stat4 b{font-family:var(--display);font-size:26px;font-weight:650;line-height:1.1;color:var(--text);font-variant-numeric:tabular-nums}.stat4 span{color:var(--muted);font-size:13px;margin-left:4px}
+.sec{margin-top:18px}.sec h2{font-family:var(--display);font-size:19px;font-weight:650;margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chips span{background:var(--plate-2);border:1px solid var(--rule);padding:7px 12px;border-radius:99px}.chips b{color:var(--hivis);font-family:var(--display);font-size:20px;margin-right:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font:500 10.5px var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--rule)}
+td{padding:8px;border-bottom:1px solid var(--rule-soft)}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}tfoot td{font-weight:700;border-bottom:0}
+.cat{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 6px}.cat h3{margin:0}.cat b{font-family:var(--display);font-size:17px;color:var(--hivis-dark)}
+.cat:first-child{margin-top:0}.tips{list-style:none;display:grid;gap:8px}.tips li{padding:10px 12px;border-left:3px solid var(--hivis);background:var(--accent-soft);border-radius:0 10px 10px 0}
+.tips.ok li{border-left-color:var(--green);background:var(--accent-soft)}
+.badge{font-family:var(--mono);font-size:11px;padding:4px 8px;border-radius:2px;border:1px solid}.badge.ok{color:var(--green);border-color:var(--green)}.badge.bad{color:var(--red);border-color:var(--red)}
+.keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:6px}
+.keys div{background:var(--plate-2);border:1px solid var(--rule);border-left:3px solid var(--hivis);border-radius:10px;padding:10px 12px}.keys small{color:var(--steel);display:block;font-size:12px}.keys b{font-family:var(--display);font-size:26px;font-weight:600}
+.tbl{overflow-x:auto}
+.viewer3d{width:100%;height:600px;border:1px solid var(--rule);border-radius:12px;background:#f6f7f4}
+@media(max-width:700px){.viewer3d{height:620px}}
+@media print{.viewer3d{display:none}.top,.head .ghost,#printBtn{display:none}body{background:#fff;color:#000}}
+</style></head>
+<body>
+<header class="top">
+  <a class="brand" href="projects.html"><span class="logo">⌂</span><strong>BuildWise</strong></a>
+  <span class="sp"></span>
+  <div class="who"><div><b id="who">…</b><small id="whoMail"></small></div><span class="role-tag" id="roleTag"></span></div>
+  <button class="ghost" id="out">Sign out</button>
+</header>
+<main class="wrap">
+  <p id="err" class="msg err" hidden></p>
+  <div id="page" hidden>
+    <div class="head">
+      <div><a class="crumb" id="back" href="projects.html">← PROJECT</a><h1 id="pName"></h1><p class="sub" id="pMeta"></p></div>
+      <button class="ghost" id="printBtn" type="button">Print</button>
+    </div>
+    <div id="body"></div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script><script src="bw-data.js"></script><script src="plan.js"></script>
+</body></html>

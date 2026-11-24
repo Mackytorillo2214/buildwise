@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · BuildWise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <main class="shell">
+    <!-- left: the drawing sheet -->
+    <section class="sheet" aria-hidden="true">
+      <div class="sheet-top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></svg></span><strong>BuildWise</strong></div>
+      <svg viewBox="0 0 520 360" class="draw" role="img" aria-label="">
+        <g fill="none" stroke="#2b3b35" stroke-width="1.6" stroke-linejoin="round">
+          <path d="M40 300 H480"/>
+          <path d="M90 300 V170 H430 V300"/>
+          <path d="M70 172 L260 70 L450 172 Z"/>
+          <rect x="130" y="205" width="64" height="95"/>
+          <rect x="250" y="200" width="70" height="52"/><path d="M285 200 V252 M250 226 H320"/>
+          <rect x="350" y="200" width="56" height="52"/><path d="M378 200 V252 M350 226 H406"/>
+          <rect x="236" y="115" width="48" height="32"/>
+        </g>
+        <g stroke="#0f7b6c" stroke-width="1.2" fill="none">
+          <path d="M90 328 H430 M90 322 V334 M430 322 V334"/>
+          <path d="M470 300 V170 M464 300 H476 M464 170 H476"/>
+        </g>
+        <g fill="#0f7b6c" font-family="IBM Plex Mono, monospace" font-size="12" text-anchor="middle">
+          <text x="260" y="346">12.40 m</text>
+          <text x="496" y="240" transform="rotate(90 496 240)">3.20 m</text>
+        </g>
+        <g stroke="#a9b8b1" stroke-width="1"><path d="M40 300 H480" stroke-dasharray="3 5"/></g>
+      </svg>
+      <p class="sheet-copy">Plan the house, price every block and sack, and hand the numbers to the crew.</p>
+      <ul class="feats">
+        <li><svg viewBox="0 0 24 24"><path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-6h6v6"/></svg><span><b>Plan</b> the lot, rooms and floors</span></li>
+        <li><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg><span><b>Price</b> every block, sack and fixture</span></li>
+        <li><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg><span><b>Track</b> progress with your foreman</span></li>
+      </ul>
+    </section>
+
+    <!-- right: the form -->
+    <section class="panel">
+      <div class="mobile-brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></svg></span><strong>BuildWise</strong></div>
+      <h1 id="title">Welcome back</h1>
+      <p class="lead">Choose how you use BuildWise, then sign in.</p>
+
+      <div class="roles" role="radiogroup" aria-label="Account type">
+        <button type="button" class="role on" data-role="client" role="radio" aria-checked="true">
+          <span class="role-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></svg></span><strong>Client</strong><small>Homeowner planning a build</small>
+        </button>
+        <button type="button" class="role" data-role="contractor" role="radio" aria-checked="false">
+          <span class="role-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 15v-3a6 6 0 0 1 6-6"/><path d="M14 6a6 6 0 0 1 6 6v3"/></svg></span><strong>Foreman / Contractor</strong><small>Builds and quotes projects</small>
+        </button>
+      </div>
+      <p class="role-note" id="roleNote"></p>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab on" data-mode="signin" role="tab" aria-selected="true">Sign in</button>
+        <button type="button" class="tab" data-mode="signup" role="tab" aria-selected="false">Create account</button>
+      </div>
+
+      <form id="form" novalidate>
+        <label class="f" id="nameRow" hidden><span>Full name</span>
+          <input id="fullName" type="text" autocomplete="name" placeholder="Juan Dela Cruz"></label>
+        <label class="f" id="companyRow" hidden><span>Company or crew name <em>(optional)</em></span>
+          <input id="company" type="text" autocomplete="organization" placeholder="JDC Construction"></label>
+        <label class="f" id="feeRow" hidden><span>Your usual contractor's fee, % <em>(optional, you can change it per project)</em></span>
+          <input id="defFee" type="number" min="0" max="100" step="0.5" placeholder="10"></label>
+        <label class="f"><span>Email or username</span>
+          <input id="email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="juan  or  you@example.com" required></label>
+        <label class="f"><span>Password</span>
+          <span class="pw"><input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters" required minlength="6">
+          <button type="button" id="toggleEye" class="eye" aria-label="Show or hide password">Show</button></span></label>
+        <button type="button" id="forgot" class="link">Forgot password?</button>
+
+        <p id="msg" class="msg" role="status" aria-live="polite" hidden></p>
+        <button type="submit" id="submit" class="go">Sign in</button>
+      </form>
+
+      <p class="preview" id="preview" hidden><b>Preview mode.</b> Supabase isn't connected yet, so any email and password opens the planner. Add your keys in <code>supabase-config.js</code> to turn on real accounts.</p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+  /* contractor's usual fee: shown with the contractor sign-up, kept as the default for new plans */
+  (function () {
+    var co = document.getElementById("companyRow"), fee = document.getElementById("feeRow"), inp = document.getElementById("defFee");
+    if (!co || !fee) return;
+    var sync = function () { fee.hidden = co.hidden; };
+    new MutationObserver(sync).observe(co, { attributes: true, attributeFilter: ["hidden"] }); sync();
+    document.getElementById("form").addEventListener("submit", function () {
+      var v = parseFloat(inp.value);
+      try { if (!fee.hidden && v >= 0 && v <= 100) localStorage.setItem("bw_default_fee", String(v)); } catch (e) {}
+    }, true);
+  })();
+  </script>
+</body>
+</html>

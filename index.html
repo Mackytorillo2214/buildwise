@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BuildWise — Know What Your Budget Can Build</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- SIDEBAR: the questions, with answers + Edit buttons -->
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="brand-icon">⌂</div>
+      <div>
+        <strong>BuildWise</strong>
+        <span>Build smarter.</span>
+      </div>
+    </div>
+
+    <div class="side-title">YOUR PROJECT</div>
+    <div class="side-count" id="sideCount">0 of 7 answered</div>
+    <div class="side-progress"><div id="sideProgress"></div></div>
+
+    <ul class="q-list" id="qList"></ul>
+
+    <div class="sidebar-bottom">
+      <button class="reset-btn" id="resetBtn">↺ Start over</button>
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <header class="topbar">
+      <div>
+        <span class="breadcrumb">My Project</span>
+        <h1>House Planner</h1>
+      </div>
+
+      <div class="profile">
+        <div class="notification">🔔</div>
+        <div class="avatar">M</div>
+        <div>
+          <strong>Homeowner</strong>
+          <small>My Account</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- 3D HOUSE VIEWER (top, middle) -->
+      <section class="card viewer-card mode-plan" id="viewerCard">
+
+        <div class="viewer-head">
+          <div>
+            <h3 id="viewerTitle">Your Lot</h3>
+            <p id="viewerSub"></p>
+          </div>
+
+          <div class="seg" id="viewTabs">
+            <button type="button" data-mode="plan" class="active">Lot plan</button>
+            <button type="button" data-mode="floor">Floor plan</button>
+            <button type="button" data-mode="3d">3D view</button>
+          </div>
+
+          <button type="button" class="outline-btn" id="tplBtn" title="Start from a ready-made house look and layout">🏠 Templates</button>
+
+          <label class="auto-toggle">
+            <input type="checkbox" id="autoRotate"> Auto-rotate
+          </label>
+        </div>
+
+        <div class="plan-wrap" id="planWrap">
+          <svg id="planSvg" preserveAspectRatio="xMidYMid meet"><g id="planContent"></g></svg>
+          <div class="plan-legend" id="planLegend"></div>
+        </div>
+
+        <div class="floor-wrap" id="floorWrap">
+          <div class="floor-tabs" id="floorTabs"></div>
+          <svg id="floorSvg" preserveAspectRatio="xMidYMid meet"><g id="floorContent"></g></svg>
+          <div class="plan-legend" id="floorLegend"></div>
+        </div>
+
+        <div class="inside-bar" id="insideBar">
+          <div class="seg" id="ioTabs"><button type="button" data-io="out" class="active">Outside</button><button type="button" data-io="in">Inside</button></div>
+          <div class="seg" id="ioFloors" hidden></div>
+          <label class="in-opt">Interior style <select id="ioStyle"></select></label>
+          <label class="in-opt"><input type="checkbox" id="ioFurn" checked> Furniture</label>
+          <label class="in-opt" id="ioWideLbl" hidden><input type="checkbox" id="ioWide"> Show the whole lot</label>
+          <div class="seg" id="zoomBtns" title="Zoom in or out"><button type="button" data-z="-">−</button><button type="button" data-z="0">Fit</button><button type="button" data-z="+">+</button></div>
+        </div>
+
+        <div class="viewport" id="viewport">
+          <div class="scene" id="scene"></div>
+          <div class="view-badge" id="viewBadge">Front view</div>
+          <div class="drag-hint">Drag to rotate · tilt up/down</div>
+          <div class="cover-badge" id="coverBadge"></div>
+        </div>
+
+        <div class="view-buttons" id="viewButtons">
+          <button data-angle="0">Front</button>
+          <button data-angle="-90">Right</button>
+          <button data-angle="180">Rear</button>
+          <button data-angle="90">Left</button>
+        </div>
+
+      </section>
+
+
+      <!-- CURRENT QUESTION -->
+      <section class="card question-card" id="questionCard"></section>
+
+
+      <!-- RESULTS (appear once every question is answered) -->
+      <section id="results"></section>
+
+    </div>
+
+  </main>
+
+  <script src="interior.js"></script>
+  <script src="lotitems.js"></script>
+  <script src="electrical.js"></script>
+  <script src="schedule.js"></script>
+  <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="bw-data.js"></script>
+  <script src="reference-chat.js"></script>
+  <script src="templates.js"></script>
+  <script src="project-bridge.js"></script>
+
+</body>
+</html>

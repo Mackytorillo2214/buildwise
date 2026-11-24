@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BuildWise connection test</title>
+<style>
+body{font:15px/1.5 system-ui,sans-serif;background:#08111d;color:#dbe7f3;max-width:640px;margin:40px auto;padding:0 20px}
+h1{font-size:22px} li{list-style:none;padding:10px 12px;margin:8px 0;border:1px solid #25405c;border-radius:3px;background:#0e1b2b}
+.ok{border-color:#3ddc97}.bad{border-color:#ff6b5b}.wait{opacity:.6} b{display:block} small{color:#8ea6bd}
+button{background:#f5b301;border:0;padding:10px 16px;border-radius:3px;font-weight:700;cursor:pointer}
+</style></head><body>
+<h1>BuildWise connection test</h1>
+<p><button id="run">Run checks</button> &nbsp; <small>Sign in on login.html first for checks 4–5.</small></p>
+<ul id="out"></ul>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+const out=document.getElementById('out');
+function row(t){const li=document.createElement('li');li.className='wait';li.innerHTML='<b>'+t+'</b><small>checking…</small>';out.appendChild(li);
+  return (ok,msg)=>{li.className=ok?'ok':'bad';li.querySelector('small').textContent=(ok?'✓ ':'✗ ')+msg;return ok}}
+document.getElementById('run').onclick=async()=>{
+  out.innerHTML='';const c=window.BUILDWISE_CONFIG||{};
+  let r=row('1. Keys filled in supabase-config.js');
+  if(!r(c.SUPABASE_URL&&!c.SUPABASE_URL.startsWith('YOUR_')&&c.SUPABASE_ANON_KEY&&!c.SUPABASE_ANON_KEY.startsWith('YOUR_'),'URL and anon key are set')){
+    out.lastChild.querySelector('small').textContent='✗ Still placeholders. Paste your Project URL and anon key.';return}
+  if(c.SUPABASE_ANON_KEY.includes('service_role')) {row('Key type')(false,'That looks like a service_role key. Use the anon public key.');return}
+  const db=supabase.createClient(c.SUPABASE_URL,c.SUPABASE_ANON_KEY);
+  r=row('2. Can reach your Supabase project (Auth)');
+  try{const res=await fetch(c.SUPABASE_URL+'/auth/v1/settings',{headers:{apikey:c.SUPABASE_ANON_KEY}});
+    r(res.ok,res.ok?'Auth server answered':'HTTP '+res.status+' — wrong URL or key')}catch(e){r(false,'Network error: '+e.message)}
+  r=row('3. Database table "profiles" exists');
+  const {error:e3}=await db.from('profiles').select('id',{count:'exact',head:true});
+  r(!e3,e3?e3.message+' — run supabase-setup.sql in the SQL Editor':'Table found and readable');
+  r=row('4. You are signed in');
+  const {data:{session}}=await db.auth.getSession();
+  r(!!session,session?session.user.email:'Not signed in. Log in on login.html, then run again');
+  if(!session)return;
+  r=row('5. Your profile row (created by the trigger)');
+  const {data,error}=await db.from('profiles').select('*').eq('id',session.user.id).maybeSingle();
+  r(!!data,error?error.message:data?'role = '+data.role+', approved = '+data.approved:'No row. The trigger is missing — re-run supabase-setup.sql, then create a new test account');
+  r=row('6. Row-level security hides other people\'s profiles');
+  const {data:all}=await db.from('profiles').select('id');
+  r(all&&all.length<=1,all?all.length+' row(s) visible to you (should be 1)':'no data');
+}
+</script></body></html>

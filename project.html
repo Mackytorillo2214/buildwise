@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Project · BuildWise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css"></head>
+<body>
+<div class="shell">
+<aside class="side" id="side" aria-label="Main navigation">
+  <a class="brand" href="projects.html"><span class="logo">⌂</span><strong>BuildWise</strong></a>
+  <nav class="snav">
+    <a href="projects.html#dashboard" class=""><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+    <a href="projects.html#list" class=""><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg>My projects</a>
+    <a href="#" id="sidePlan" class="" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 12h8V4M12 12v8"/></svg>House plan</a>
+    <button type="button" id="sideNew"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>New project</button>
+  </nav>
+  <div class="sfoot"><div class="suser"><b id="who">…</b><small id="whoMail"></small></div><span class="role-tag" id="roleTag"></span><button class="sout" id="out"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button></div>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+<div class="main">
+<header class="top">
+  <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <span class="tcrumb" id="tcrumb">Project</span>
+</header>
+<main class="wrap">
+  <div id="previewBanner" class="banner" hidden><b>Preview mode.</b> Data is saved only in this browser.</div>
+  <p id="err" class="msg err" hidden></p>
+  <div id="page" hidden>
+    <div class="head">
+      <div><a class="crumb" href="projects.html">← ALL PROJECTS</a><h1 id="pName"></h1><p class="sub" id="pMeta"></p></div>
+      <div class="head-act"><span class="st-chip" id="startChip"></span><button class="go" id="startBtn" type="button" hidden>Start project</button><a class="ghost" id="planLink" href="#"></a></div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Project sections">
+      <button type="button" role="tab" id="tab-overview" aria-controls="pane-overview" aria-selected="true" data-tab="overview">Overview</button>
+      <button type="button" role="tab" id="tab-progress" aria-controls="pane-progress" aria-selected="false" data-tab="progress">Progress &amp; timeline</button>
+      <button type="button" role="tab" id="tab-payments" aria-controls="pane-payments" aria-selected="false" data-tab="payments">Payments</button>
+      <button type="button" role="tab" id="tab-budget" aria-controls="pane-budget" aria-selected="false" data-tab="budget">Budget</button>
+      <button type="button" role="tab" id="tab-plan" aria-controls="pane-plan" aria-selected="false" data-tab="plan">House plan</button>
+    </div>
+
+    <section class="pane" id="pane-overview" role="tabpanel" aria-labelledby="tab-overview">
+      <div class="ov-grid">
+        <section class="plate hero" id="hero"></section>
+        <section class="plate"><h3>Project information</h3><div class="facts" id="facts"></div></section>
+        <section class="plate"><h3>People</h3><div class="people" id="people"></div></section>
+        <section class="plate wide"><h3>Milestones</h3><ol class="miles" id="miles"></ol></section>
+        <section class="plate wide"><div class="h3row"><h3>Recent activity</h3><button type="button" class="linkbtn" data-goto="progress">See all updates</button></div><ol class="feed" id="feedMini"></ol></section>
+        <section class="plate" id="connect" hidden>
+          <h3>Contractor</h3>
+          <p class="note" id="connectNote" style="margin-bottom:10px"></p>
+          <div class="f combo" id="proBlock2">
+            <input type="text" id="pPro2" role="combobox" aria-expanded="false" aria-controls="proList2" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search a foreman or company name">
+            <ul id="proList2" class="plist" role="listbox" hidden></ul>
+          </div>
+          <p class="msg err" id="cErr" hidden></p>
+          <button class="go" id="cGo" type="button" disabled>Connect contractor</button>
+        </section>
+      </div>
+    </section>
+
+    <section class="pane" id="pane-progress" role="tabpanel" aria-labelledby="tab-progress" hidden>
+      <section class="plate big" aria-label="Progress">
+        <div class="prow"><span id="stageName"></span><b id="pct"></b></div>
+        <div class="pbar" id="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="barFill" style="width:0"></i></div>
+        <div class="stages" id="stages"></div>
+      </section>
+      <div class="two">
+        <section class="plate">
+          <h3>Progress updates</h3>
+          <ol class="feed" id="feed"></ol>
+        </section>
+        <aside style="display:flex;flex-direction:column;gap:16px">
+          <section class="plate" id="composer" hidden>
+            <h3>Post an update</h3>
+            <form id="upForm">
+              <label class="f"><span>What was done?</span><textarea id="upMsg" maxlength="1000" placeholder="Second-floor slab poured. Curing for 7 days." required></textarea></label>
+              <div class="f"><span>Photos <em>(optional, up to 4)</em></span>
+                <div class="ph-row" id="upThumbs"></div>
+                <label class="ph-add" id="upAddLbl">+ Add photos<input type="file" id="upFile" accept="image/*" multiple hidden></label></div>
+              <label class="f"><span>Overall progress</span><div class="range-row"><input type="range" id="upRange" min="0" max="100" step="1"><output id="upOut"></output></div></label>
+              <p class="msg err" id="upErr" hidden></p>
+              <button class="go" id="upGo" type="submit">Post update</button>
+              <p class="note" style="margin-top:10px">Your client sees this right away.</p>
+            </form>
+          </section>
+          <section class="plate readonly" id="clientNote" hidden>
+            <h3>Following your build</h3>
+            <p class="note">Your foreman posts progress here. You can read every update, but only the foreman can add or change them.</p>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <section class="pane" id="pane-payments" role="tabpanel" aria-labelledby="tab-payments" hidden>
+      <section class="plate"><div id="payRoot"></div></section>
+    </section>
+
+    <section class="pane" id="pane-budget" role="tabpanel" aria-labelledby="tab-budget" hidden>
+      <div class="bud" id="bud"></div>
+      <div id="budBreak"></div>
+    </section>
+
+    <section class="pane" id="pane-plan" role="tabpanel" aria-labelledby="tab-plan" hidden>
+      <section class="plate"><h3>Plan summary</h3><div class="facts plansum" id="planSum"></div><p class="note" id="planNote" style="margin-top:12px"></p></section>
+    </section>
+  </div>
+  </main>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script><script src="bw-data.js"></script><script src="payments.js"></script><script src="project.js"></script><script src="nav.js"></script>
+</body></html>
