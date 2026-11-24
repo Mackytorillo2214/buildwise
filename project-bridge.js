@@ -38,6 +38,16 @@
     : `<span style="color:#ff6b5b">This project wasn't found or isn't shared with you.</span><span style="flex:1"></span><a href="projects.html" style="${b}">All projects</a>`;
   document.body.insertBefore(bar, document.body.firstChild);
   if (!project) return;
+  /* work has started with a contractor: the plan is locked, and edits go to the contractor as a change request */
+  const locked = BW.planLocked(user, project);
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  if (locked) {
+    const sv = document.getElementById("bwSave"); if (sv) sv.textContent = "Send change request";
+    const nb = document.createElement("div");
+    nb.style.cssText = "padding:9px 28px;background:#fff4e0;color:#7a4a00;border-bottom:1px solid #f0c987;font:500 13.5px system-ui,sans-serif";
+    nb.innerHTML = "<b>Work has started.</b> The saved plan is locked. Make your changes here, then press <b>Send change request</b>. Your foreman approves or declines it, and an approved request becomes the official plan.";
+    bar.after(nb);
+  }
   const sidebar = document.querySelector(".sidebar");
   if (sidebar) { sidebar.style.top = bar.offsetHeight + "px"; sidebar.style.height = "calc(100vh - " + bar.offsetHeight + "px)"; }
 
@@ -99,6 +109,7 @@
   const note = t => { const el = document.getElementById("bwSaved"); if (el) el.textContent = t; };
   let saving = false, again = false, timer = 0, dirty = false;
   async function saveNow(manual) {
+    if (locked) return;   /* locked plans are never auto-saved */
     if (saving) { again = true; return; }
     saving = true; dirty = false; note(manual ? "Saving…" : "Saving changes…");
     try {
@@ -109,7 +120,7 @@
     saving = false;
     if (again) { again = false; schedule(); }
   }
-  function schedule() { dirty = true; note("Unsaved changes…"); clearTimeout(timer); timer = setTimeout(() => saveNow(false), 1500); }
+  function schedule() { dirty = true; if (locked) { note("Draft changes, not sent yet"); return; } note("Unsaved changes…"); clearTimeout(timer); timer = setTimeout(() => saveNow(false), 1500); }
 
   /* save automatically whenever an answer changes (the planner redraws through these two functions) */
   ["liveUpdate", "refreshAll"].forEach(name => {
@@ -131,5 +142,30 @@
   }
 
   const btn = document.getElementById("bwSave");
-  if (btn) btn.onclick = async () => { clearTimeout(timer); btn.disabled = true; await saveNow(true); btn.disabled = false; };
+  /* ask for a short reason, then send the proposed plan to the contractor */
+  const askNote = () => new Promise(ok => {
+    const box = document.createElement("div");
+    box.style.cssText = "position:fixed;inset:0;z-index:99;background:rgba(10,20,30,.55);display:grid;place-items:center;padding:16px";
+    box.innerHTML = `<div role="dialog" aria-modal="true" aria-label="Send change request" style="background:#fff;color:#1f2d28;border-radius:12px;padding:20px;max-width:440px;width:100%;font:500 14px system-ui,sans-serif">
+      <h3 style="margin:0 0 6px;font-size:18px">Send change request</h3>
+      <p style="margin:0 0 10px;color:#5a6b66">Your foreman will see the old and new cost and can approve or decline. Say what you want changed.</p>
+      <textarea id="crNote" maxlength="500" rows="3" placeholder="Example: add one more bedroom on the second floor" style="width:100%;box-sizing:border-box;padding:9px;border:1px solid #cfd8d4;border-radius:8px;font:inherit"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button type="button" id="crNo" style="padding:8px 14px;border:1px solid #cfd8d4;background:#fff;border-radius:8px;cursor:pointer">Cancel</button><button type="button" id="crYes" style="padding:8px 16px;border:0;background:#147D70;color:#fff;border-radius:8px;font-weight:700;cursor:pointer">Send</button></div></div>`;
+    const done = v => { box.remove(); ok(v); };
+    box.querySelector("#crNo").onclick = () => done(null);
+    box.querySelector("#crYes").onclick = () => done(box.querySelector("#crNote").value.trim());
+    document.body.appendChild(box); box.querySelector("#crNote").focus();
+  });
+  if (btn && locked) btn.onclick = async () => {
+    const text = await askNote(); if (text === null) return;
+    btn.disabled = true; note("Sending…");
+    try {
+      const total = Math.round(calc(S).total || 0);
+      await BW.sendChangeRequest(user, id, { note: text, plan: { S: JSON.parse(JSON.stringify(S)), answered: answered.slice(), summary: buildSummary(), chat: window.RefChat ? RefChat.getChat() : [] }, total, budget: S.budget || null, oldTotal: project.plan_total || null });
+      dirty = false; note("Change request sent. Waiting for your foreman.");
+      btn.textContent = "Sent ✓";
+      setTimeout(() => { btn.textContent = "Send change request"; btn.disabled = false; }, 2500);
+    } catch (e) { note("Couldn't send: " + (/change_requests/.test(e.message || "") ? "run the change requests SQL in Supabase first." : (e.message || e))); btn.disabled = false; }
+  };
+  else if (btn) btn.onclick = async () => { clearTimeout(timer); btn.disabled = true; await saveNow(true); btn.disabled = false; };
 })();
