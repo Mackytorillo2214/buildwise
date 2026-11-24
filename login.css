@@ -155,3 +155,10 @@ input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(20,125,112,.16)}
 .go:active:not(:disabled){transform:translateY(1px)}
 .eye,.link{color:var(--teal-dark)}
 @media(max-width:860px){.shell{border-radius:18px}}
+
+/* remember me + forgot password row */
+.sign-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:-2px 0 14px; }
+.sign-row[hidden] { display:none; }
+.sign-row .link { margin:0; }
+.rem { display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); cursor:pointer; user-select:none; }
+.rem input { width:16px; height:16px; margin:0; accent-color:var(--hivis-dark, #0f766e); cursor:pointer; }
