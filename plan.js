@@ -75,13 +75,13 @@
 
     <section class="plate sec"><h2>Cost summary</h2>
       ${(() => {
-        const type = m.payType || "arawan", hideFee = type === "contractor" && m.showFee === false && !isPro;
+        const type = m.payType || "arawan", hideFee = false;   /* clients can see the contractor's fee and rate */
         const L = [[type === "pakyawan" ? "Materials (bought by the owner)" : "Materials", m.materials]];
         L.push([type === "pakyawan" ? "Labor (pakyawan, fixed price)" : hideFee ? "Labor and contractor services" : "Labor", m.labor + (hideFee ? m.fee : 0)]);
         L.push(["Permits, hauling & misc.", m.permits], ["Contingency", m.contingency]);
         if (type === "contractor" && !hideFee) L.push(["Contractor's fee (" + (m.feeLabel || "") + ")", m.fee]);
         const who = type === "pakyawan" && isPro ? `<p class="note" style="margin-top:10px">Pakyawan price ${peso(m.labor)} − estimated crew cost ${peso(m.crewCost)} = <b>${peso(m.margin)}</b> left for the foreman.</p>`
-          : type === "contractor" && isPro ? `<p class="note" style="margin-top:10px">Your contractor's fee: <b>${peso(m.fee)}</b>${m.showFee === false ? " (hidden from the client)" : ""}.</p>` : "";
+          : type === "contractor" && isPro ? `<p class="note" style="margin-top:10px">Your contractor's fee: <b>${peso(m.fee)}</b>. Your client can see this fee and rate.</p>` : "";
         return `<p class="note" style="margin-bottom:8px">Pay type: <b>${{ arawan: "Arawan (daily crew)", pakyawan: "Pakyawan (fixed labor price)", contractor: "Contractor (materials + labor + fee)" }[type]}</b></p>
       <div class="tbl"><table><tbody>${L.map(l => `<tr><td>${l[0]}</td><td class="n">${peso(l[1])}</td></tr>`).join("")}</tbody>
       <tfoot><tr><td>${type === "contractor" ? "Total the client pays" : "Estimated total"}</td><td class="n">${peso(m.total)}</td></tr>
