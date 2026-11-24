@@ -43,7 +43,7 @@
     const S0 = project.plan_data && project.plan_data.S, R0 = S0 && S0.rooms || {};
     const rows = S0 ? [["Floors", S0.floors], ["Floor area", S0.floorArea ? S0.floorArea + " sqm" : null], ["Lot area", S0.lotArea ? Math.round(S0.lotArea) + " sqm" : null], ["Bedrooms", (R0.master || 0) + (R0.bed || 0) || null], ["Bathrooms", (R0.masterT != null ? R0.masterT : R0.master || 0) + (R0.cr || 0) || null], ["Extras on the lot", (S0.lotItems || []).length || null]].filter(r => r[1]) : [];
     $("planSum").innerHTML = rows.map(r => `<div><small>${r[0].toUpperCase()}</small><b>${esc(r[1])}</b></div>`).join("") || "";
-    $("planNote").textContent = rows.length ? (BW.isOwner(user, project) ? "Open the house plan to change any of this. The estimate updates as you do." : "This is the house plan your client saved.") : "No house plan has been saved yet.";
+    $("planNote").textContent = rows.length ? (BW.isOwner(user, project) ? (BW.planLocked(user, project) ? "Work has started, so the plan is locked. Send a change request to change it." : "Open the house plan to change any of this. The estimate updates as you do.") : "This is the house plan your client saved.") : "No house plan has been saved yet.";
     paintBreakdown();
   }
   /* budget breakdown: every cost line of the saved plan, and how much of it the payments received so far cover */
@@ -153,6 +153,7 @@
   document.querySelectorAll("[data-goto]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.goto)));
   $("page").hidden = false;
   paintHead(); paintProgress(project.progress); await paintFeed(); paintExtras(); hydratePhotos();
+  try { const n = await CRPanel.init({ project, user, box: $("crBox") }); if (n) $("tab-plan").textContent = "House plan (" + n + ")"; } catch (e) { console.warn("change requests", e); }
   showTab(tabs.some(t => "#" + t.dataset.tab === location.hash) ? location.hash.slice(1) : "overview");
   const canPost = BW.canPost(user, project);
   Pay.mount({ project, user, isPro, BW, canManage: canPost, canSend: !isPro, repaint: () => { paintHead(); paintBreakdown(); } });
