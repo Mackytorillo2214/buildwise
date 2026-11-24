@@ -75,7 +75,10 @@
         <label class="f"><span>Password</span>
           <span class="pw"><input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters" required minlength="6">
           <button type="button" id="toggleEye" class="eye" aria-label="Show or hide password">Show</button></span></label>
-        <button type="button" id="forgot" class="link">Forgot password?</button>
+        <div class="sign-row" id="signRow">
+          <label class="rem"><input type="checkbox" id="remember" checked> <span>Remember me</span></label>
+          <button type="button" id="forgot" class="link">Forgot password?</button>
+        </div>
 
         <p id="msg" class="msg" role="status" aria-live="polite" hidden></p>
         <button type="submit" id="submit" class="go">Sign in</button>
