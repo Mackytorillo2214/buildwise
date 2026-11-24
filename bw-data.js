@@ -3,7 +3,13 @@ window.BW = (function () {
   const cfg = window.BUILDWISE_CONFIG || {};
   const configured = cfg.SUPABASE_URL && !String(cfg.SUPABASE_URL).startsWith("YOUR_") && window.supabase;
   const base = configured ? (() => { try { return new URL(cfg.SUPABASE_URL.trim()).origin; } catch (e) { return cfg.SUPABASE_URL.trim(); } })() : "";
-  const db = configured ? window.supabase.createClient(base, cfg.SUPABASE_ANON_KEY.trim()) : null;
+  /* "Remember me": keep the sign-in in localStorage (stays after closing the browser) or in sessionStorage (ends when the tab or browser closes) */
+  const bwStore = {
+    getItem(k) { try { const v = localStorage.getItem(k); return v !== null ? v : sessionStorage.getItem(k); } catch (e) { return null; } },
+    setItem(k, v) { try { const keep = localStorage.getItem("bw_remember") !== "0"; (keep ? localStorage : sessionStorage).setItem(k, v); (keep ? sessionStorage : localStorage).removeItem(k); } catch (e) {} },
+    removeItem(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} }
+  };
+  const db = configured ? window.supabase.createClient(base, cfg.SUPABASE_ANON_KEY.trim(), { auth: { storage: bwStore, persistSession: true, autoRefreshToken: true } }) : null;
   const FAKE = "@buildwise.example.com";
   const STAGES = [
     { name: "Site preparation", from: 0 },
