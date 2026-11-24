@@ -427,3 +427,14 @@ dialog[open]{animation:kcPop .2s ease}
 .cb-bar{display:flex;height:14px;border-radius:99px;overflow:hidden;margin:6px 0 12px;background:#eee}
 .cb-bar i{display:block;height:100%}
 .cb-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+
+/* change requests */
+.cr-card{border:1px solid #f0c987;background:#fffaf0;border-radius:12px;padding:14px;margin:8px 0}
+.cr-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.cr-badge{font-size:11.5px;font-weight:700;background:#fff0cc;color:#8a5a00;border-radius:99px;padding:3px 10px;white-space:nowrap}
+.cr-badge.approved{background:#dff3ec;color:#0f6b5c}.cr-badge.declined{background:#fde4e0;color:#a8321f}
+.cr-note{margin:8px 0;font-style:italic}
+.cr-total td{font-weight:700;border-top:2px solid #e3ded3}
+.cr-up{color:#a8321f}.cr-down{color:#0f6b5c}.cr-same{color:#6b6b66}
+.cr-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.cr-past{list-style:none;padding:0;margin:0}.cr-past li{padding:8px 0;border-top:1px solid #eee;font-size:13.5px}
