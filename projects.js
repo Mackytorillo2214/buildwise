@@ -160,13 +160,13 @@
   }
   let chosenPro = null;
   makePicker($("pClient"), $("clientList"), BW.searchClients, c => [c.full_name || BW.shownName(c.email), BW.shownName(c.email)], c => { if (c) $("pClient").value = BW.shownName(c.email); });
-  makePicker($("pPro"), $("proList"), BW.searchContractors, c => [c.full_name || "Contractor", c.company || "No company name"], c => { chosenPro = c; });
+  makePicker($("pPro"), $("proList"), BW.searchContractors, c => [c.full_name || "Contractor", c.company || "No company name"], c => { chosenPro = c; ContractorCard.show($("proCard"), c && c.id); });
   window.__bwPicker = { get pro() { return chosenPro; } };
 
   /* new project */
   const dlg = $("dlg");
   function openNew() {
-    $("newForm").reset(); chosenPro = null; $("dErr").hidden = true;
+    $("newForm").reset(); chosenPro = null; ContractorCard.show($("proCard"), null); $("dErr").hidden = true;
     $("clientBlock").hidden = !isPro; $("proBlock").hidden = isPro;
     $("dNote").textContent = isPro
       ? "Pick a client from the list. They see this project and every update you post when they sign in. Not listed yet? Type the login they will use and it links once they sign up."
