@@ -41,11 +41,11 @@
   const card = p => {
     const st = BW.stageOf(p.progress), u = last[p.id], over = p.budget && p.plan_total && p.plan_total > p.budget;
     return `<a class="pcard" href="project.html?id=${encodeURIComponent(p.id)}" aria-label="Open ${esc(p.name)}">
-      <div class="pc-cover">${cover(p)}<span class="pc-pill ${p.progress >= 100 ? "done" : ""}">${p.progress >= 100 ? "Completed" : esc(st.name)}</span></div>
+      <div class="pc-cover">${cover(p)}<span class="pc-pill ${p.progress >= 100 ? "done" : ""}">${p.progress >= 100 ? "Completed" : BW.isStarted(p) ? esc(st.name) : "Not started"}</span></div>
       <div class="pc-body">
         <h2>${esc(p.name)}</h2>
         <div class="pc-meta"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>${esc(p.location || "No location yet")}</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>${esc(whoOf(p))}</span></div>
-        <div><div class="prow"><span>${esc(st.name)}</span><b>${p.progress}%</b></div>
+        <div><div class="prow"><span>${BW.isStarted(p) ? esc(st.name) : "Not started yet"}</span><b>${p.progress}%</b></div>
         <div class="pbar ${p.progress >= 100 ? "done" : ""}" role="progressbar" aria-valuenow="${p.progress}" aria-valuemin="0" aria-valuemax="100"><i style="width:0" data-w="${p.progress}"></i></div></div>
         <div class="pc-money"><div><small>Estimate</small><b>${peso(p.plan_total)}</b></div><div><small>Budget</small><b class="${over ? "over" : ""}">${peso(p.budget)}</b></div></div>
         <div class="last">${u ? esc(u.message.length > 100 ? u.message.slice(0, 100) + "…" : u.message) + `<br><small class="meta">Latest update · ${ago(u.created_at)}</small>` : '<span class="meta">No updates yet</span>'}</div>
@@ -56,11 +56,12 @@
   const link = p => "project.html?id=" + encodeURIComponent(p.id);
 
   /* ---- Dashboard: overview, what needs attention, latest news. Everything is worked out from real project data. ---- */
+  const started = p => BW.isStarted(p), pending = p => !started(p), running = p => started(p) && p.progress < 100;
   function paintDash() {
     if (!projects.length) { $("stats").hidden = true; $("vDash").querySelector(".dgrid").innerHTML = emptyHTML(); wireEmpty(); return; }
-    const done = projects.filter(p => p.progress >= 100).length, est = projects.reduce((n, p) => n + (p.plan_total || 0), 0);
+    const done = projects.filter(p => p.progress >= 100).length, notStarted = projects.filter(pending).length, going = projects.filter(running).length, est = projects.reduce((n, p) => n + (p.plan_total || 0), 0);
     $("stats").hidden = false;
-    $("stats").innerHTML = [["Total projects", projects.length, "folder"], ["Ongoing", projects.length - done, "hammer"], ["Completed", done, "check"], ["Total estimated cost", pesoShort(est), "peso"]]
+    $("stats").innerHTML = [["Total projects", projects.length, "folder"], ["Not started", notStarted, "folder"], ["Ongoing", going, "hammer"], ["Completed", done, "check"], ["Total estimated cost", pesoShort(est), "peso"]]
       .map(([l, v, ic]) => `<div class="stat"><span class="sico ${ic}" aria-hidden="true"></span><div><small>${l}</small><b>${v}</b></div></div>`).join("");
 
     const items = [];
@@ -68,7 +69,7 @@
       if (p.progress >= 100) return;
       const days = Math.floor((Date.now() - lastTime(p)) / DAY);
       if (p.budget && p.plan_total && p.plan_total > p.budget) items.push({ s: 0, p, t: `estimate is <b>${peso(p.plan_total - p.budget)}</b> over the budget` });
-      if (days >= 7) items.push({ s: 1, p, t: last[p.id] ? `no update for <b>${days} days</b>` : `no updates posted in <b>${days} days</b>` });
+      if (started(p) && days >= 7) items.push({ s: 1, p, t: last[p.id] ? `no update for <b>${days} days</b>` : `no updates posted in <b>${days} days</b>` });
       if (isPro ? !p.client_email : !p.contractor_name) items.push({ s: 2, p, t: isPro ? "no client linked yet" : "no contractor connected yet" });
       if (!p.plan_total) items.push({ s: 2, p, t: "no house plan saved yet" });
     });
@@ -78,7 +79,7 @@
       ? shown.map(i => `<li><a href="${link(i.p)}"><span class="sev ${sev[i.s]}" aria-hidden="true"></span><span class="at"><b>${esc(i.p.name)}</b> · ${i.t}</span>${chev}</a></li>`).join("") + (items.length > shown.length ? `<li class="more">+ ${items.length - shown.length} more in My projects</li>` : "")
       : `<li class="clear"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>All clear. Nothing needs attention right now.</li>`;
 
-    const rows = BW.STAGES.map(s => ({ n: s.name, c: projects.filter(p => p.progress < 100 && BW.stageOf(p.progress) === s).length }));
+    const rows = [{ n: "Not started", c: notStarted }].concat(BW.STAGES.map(s => ({ n: s.name, c: projects.filter(p => running(p) && BW.stageOf(p.progress) === s).length })));
     rows.push({ n: "Completed", c: done, d: 1 });
     const mx = Math.max(1, ...rows.map(r => r.c));
     $("stageBars").innerHTML = rows.map(r => `<div class="sb ${r.c ? "" : "zero"}"><span>${esc(r.n)}</span><div class="sbar"><i class="${r.d ? "done" : ""}" style="width:${r.c / mx * 100}%"></i></div><b>${r.c}</b></div>`).join("");
@@ -94,7 +95,7 @@
     const all = projects.length;
     if (!all) { $("lcount").textContent = ""; $("list").innerHTML = emptyHTML(); wireEmpty(); return; }
     const q = qs.trim().toLowerCase();
-    let rows = projects.filter(p => (flt === "all" || (flt === "done") === (p.progress >= 100)) &&
+    let rows = projects.filter(p => (flt === "all" || (flt === "done" && p.progress >= 100) || (flt === "ongoing" && running(p)) || (flt === "pending" && pending(p))) &&
       (!q || [p.name, p.location, p.client_name, p.client_email && BW.shownName(p.client_email), p.contractor_name].some(x => x && String(x).toLowerCase().includes(q))));
     rows.sort(sortBy === "name" ? (a, b) => a.name.localeCompare(b.name) : sortBy === "progress" ? (a, b) => b.progress - a.progress : sortBy === "activity" ? (a, b) => lastTime(b) - lastTime(a) : (a, b) => b.created_at.localeCompare(a.created_at));
     $("lcount").textContent = rows.length === all ? all + (all === 1 ? " project" : " projects") : "Showing " + rows.length + " of " + all;
