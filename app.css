@@ -409,3 +409,16 @@ dialog[open]{animation:kcPop .2s ease}
 .bk-det[open] summary{background:#e9f1ee}
 .bk-in{font-size:13px;margin:6px 0 8px}
 .bk-in th,.bk-in td{padding:6px 8px}
+
+/* contractor profile card */
+.cc{border:1px solid var(--line,#e3ded3);border-radius:12px;padding:14px;background:#fff;margin:10px 0}
+.cc-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.cc-top small{display:block;color:#6b6b66;font-size:12px;margin-top:2px}
+.cc-name{font-size:16px}
+.cc-fee{text-align:right;background:#fff4e0;border-radius:10px;padding:6px 12px;white-space:nowrap}
+.cc-fee b{display:block;font-size:20px;color:#a85f00}
+.cc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.cc-stats div{background:#f6f4ee;border-radius:8px;padding:8px;text-align:center}
+.cc-stats b{display:block;font-size:17px}.cc-stats small{color:#6b6b66;font-size:11px}
+.cc-none,.cc-hint{color:#6b6b66;font-size:12.5px;margin:10px 0 0}
+@media(max-width:480px){.cc-stats{grid-template-columns:repeat(2,1fr)}}
