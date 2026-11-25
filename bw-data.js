@@ -142,21 +142,22 @@ window.BW = (function () {
   const isOwner = (user, p) => ownerOf(p) === user.id;
   /* a project linked to the other side stays "pending" until they accept (older projects have no status and count as accepted) */
   const linkPending = p => p.link_status === "pending";
+  const linkOff = p => p.link_status === "pending" || p.link_status === "declined";   /* no work happens until the other side accepts */
   const isRequestForMe = (user, p) => linkPending(p) && !isOwner(user, p);
+  const isDeclinedByMe = (user, p) => p.link_status === "declined" && !isOwner(user, p);
   async function respondToProject(id, accept) {
     if (!db) {
-      const d = store(); const p = d.projects.find(x => x.id === id); if (!p || p.link_status !== "pending") return;
-      if (accept) p.link_status = "accepted";
-      else { p.link_status = "declined"; if (p.created_by === p.contractor_id) p.client_email = null; else p.contractor_id = null; }
+      const d = store(); const p = d.projects.find(x => x.id === id); if (!p || !(p.link_status === "pending" || (accept && p.link_status === "declined"))) return;
+      p.link_status = accept ? "accepted" : "declined";
       save(d); return;
     }
     const { error } = await db.rpc("respond_to_project", { pid: id, accept }); if (error) throw error;
   }
-  const canPost = (user, p) => !linkPending(p) && (p.contractor_id ? p.contractor_id === user.id : ownerOf(p) === user.id);
+  const canPost = (user, p) => !linkOff(p) && (p.contractor_id ? p.contractor_id === user.id : ownerOf(p) === user.id);
 
   /* once work has started with a contractor connected, the client's plan edits become change requests */
   const isStarted = p => !!(p.started_at || (p.progress || 0) > 0);
-  const planLocked = (user, p) => !!(!linkPending(p) && p.contractor_id && p.contractor_id !== user.id && isOwner(user, p) && isStarted(p));
+  const planLocked = (user, p) => !!(!linkOff(p) && p.contractor_id && p.contractor_id !== user.id && isOwner(user, p) && isStarted(p));
 
   /* ---------- change requests ---------- */
   async function listChangeRequests(id) {
@@ -264,5 +265,5 @@ window.BW = (function () {
     return data;
   }
 
-  return { db, configured: !!db, STAGES, stageOf, shownName, me, proLabel, saveProfile, signOut, listProjects, lastUpdates, createProject, uploadReference, uploadUpdatePhoto, referenceUrl, connectContractor, searchContractors, contractorProfile, linkPending, isRequestForMe, respondToProject, isStarted, planLocked, listChangeRequests, sendChangeRequest, cancelChangeRequest, decideChangeRequest, isOwner, canPost, searchClients, getProject, savePlan, deleteProject, listUpdates, addUpdate, updateProject };
+  return { db, configured: !!db, STAGES, stageOf, shownName, me, proLabel, saveProfile, signOut, listProjects, lastUpdates, createProject, uploadReference, uploadUpdatePhoto, referenceUrl, connectContractor, searchContractors, contractorProfile, linkPending, linkOff, isRequestForMe, isDeclinedByMe, respondToProject, isStarted, planLocked, listChangeRequests, sendChangeRequest, cancelChangeRequest, decideChangeRequest, isOwner, canPost, searchClients, getProject, savePlan, deleteProject, listUpdates, addUpdate, updateProject };
 })();
