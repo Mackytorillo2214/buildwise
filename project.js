@@ -156,6 +156,31 @@
   try { const n = await CRPanel.init({ project, user, box: $("crBox") }); if (n) $("tab-plan").textContent = "House plan (" + n + ")"; } catch (e) { console.warn("change requests", e); }
   showTab(tabs.some(t => "#" + t.dataset.tab === location.hash) ? location.hash.slice(1) : "overview");
   const canPost = BW.canPost(user, project);
+  /* a new link between a client and a contractor waits until the other side accepts */
+  (function paintRequest() {
+    const box = $("reqBox"), st = project.link_status, mine = BW.isOwner(user, project);
+    const clientName = project.client_name || (project.client_email ? BW.shownName(project.client_email) : "the client");
+    const other = isPro ? clientName : (project.contractor_name || "the contractor");
+    const btn = (i, t, c) => `<button type="button" class="${c}" id="${i}">${t}</button>`;
+    let h = "";
+    if (st === "pending" && !mine) {
+      const from = isPro ? clientName : (project.contractor_name || "A contractor");
+      h = `<h3>New project request</h3><p>${esc(from)} ${isPro ? "wants you as the foreman or contractor on" : "added you as the client on"} <b>${esc(project.name)}</b>${project.location ? " in " + esc(project.location) : ""}.
+        ${project.plan_total ? "Estimate " + peso(project.plan_total) + (project.budget ? ", budget " + peso(project.budget) : "") + "." : "No house plan is saved yet."}
+        Look through the project, then accept or decline. Until you accept, ${isPro ? "you can't post updates or start the project" : "the project isn't linked to you"}.</p>
+        <p class="msg err" id="reqErr" hidden></p><div class="cr-btns">${btn("reqYes", "Accept project", "go")}${btn("reqNo", "Decline", "ghost")}</div>`;
+    } else if (st === "pending") {
+      h = `<h3>Waiting for ${esc(other)} to accept</h3><p>${esc(other)} has to accept this project before it links to them. Until then they can't post updates or start work.</p>
+        ${!isPro ? `<p class="msg err" id="reqErr" hidden></p><div class="cr-btns">${btn("reqCancel", "Cancel request", "ghost")}</div>` : ""}`;
+    } else if (st === "declined" && mine) {
+      h = `<h3>${esc(other)} declined this project</h3><p>${isPro ? "The client didn't accept it, so it isn't linked to them." : "Pick another contractor below, or keep tracking progress yourself."}</p>`;
+    }
+    box.hidden = !h; box.innerHTML = h; if (!h) return;
+    const run = fn => async () => { try { await fn(); location.reload(); } catch (e) { const m = $("reqErr"); if (m) { m.textContent = /respond_to_project|link_status/.test(e.message || "") ? "The database needs the project request SQL first. Run project_requests.sql in Supabase." : (e.message || String(e)); m.hidden = false; } } };
+    if ($("reqYes")) $("reqYes").onclick = run(() => BW.respondToProject(id, true));
+    if ($("reqNo")) $("reqNo").onclick = run(() => BW.respondToProject(id, false).then(() => { location.href = "projects.html"; throw new Error("redirect"); }).catch(e => { if (e.message !== "redirect") throw e; }));
+    if ($("reqCancel")) $("reqCancel").onclick = run(() => BW.connectContractor(id, null));
+  })();
   Pay.mount({ project, user, isPro, BW, canManage: canPost, canSend: !isPro, repaint: () => { paintHead(); paintBreakdown(); } });
   $("composer").hidden = !canPost; $("clientNote").hidden = canPost;
   $("clientNote").querySelector("p").textContent = project.contractor_name && !isPro
@@ -165,7 +190,9 @@
   /* a client who owns the project can connect (or change) the contractor */
   if (!isPro && BW.isOwner(user, project)) {
     $("connect").hidden = false;
-    $("connectNote").textContent = project.contractor_name
+    $("connectNote").textContent = project.contractor_name && project.link_status === "pending"
+      ? "Waiting for " + project.contractor_name + " to accept. Pick someone else to change it."
+      : project.contractor_name
       ? "Connected to " + project.contractor_name + ". Pick someone else to change it."
       : "Not connected yet. Pick a contractor and they will see your saved plan and post progress updates. Without one, you track progress yourself.";
     let chosen = null;
