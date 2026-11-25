@@ -41,7 +41,7 @@
   const card = p => {
     const st = BW.stageOf(p.progress), u = last[p.id], over = p.budget && p.plan_total && p.plan_total > p.budget;
     return `<a class="pcard" href="project.html?id=${encodeURIComponent(p.id)}" aria-label="Open ${esc(p.name)}">
-      <div class="pc-cover">${cover(p)}<span class="pc-pill ${p.progress >= 100 ? "done" : ""}">${p.progress >= 100 ? "Completed" : BW.isStarted(p) ? esc(st.name) : "Not started"}</span></div>
+      <div class="pc-cover">${cover(p)}<span class="pc-pill ${p.progress >= 100 ? "done" : ""}">${isReq(p) ? "Request" : p.link_status === "pending" ? "Waiting to be accepted" : p.progress >= 100 ? "Completed" : BW.isStarted(p) ? esc(st.name) : "Not started"}</span></div>
       <div class="pc-body">
         <h2>${esc(p.name)}</h2>
         <div class="pc-meta"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>${esc(p.location || "No location yet")}</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>${esc(whoOf(p))}</span></div>
@@ -57,15 +57,17 @@
 
   /* ---- Dashboard: overview, what needs attention, latest news. Everything is worked out from real project data. ---- */
   const started = p => BW.isStarted(p), pending = p => !started(p), running = p => started(p) && p.progress < 100;
+  const isReq = p => BW.isRequestForMe(user, p);
   function paintDash() {
     if (!projects.length) { $("stats").hidden = true; $("vDash").querySelector(".dgrid").innerHTML = emptyHTML(); wireEmpty(); return; }
-    const done = projects.filter(p => p.progress >= 100).length, notStarted = projects.filter(pending).length, going = projects.filter(running).length, est = projects.reduce((n, p) => n + (p.plan_total || 0), 0);
+    const real = projects.filter(p => !isReq(p)), done = real.filter(p => p.progress >= 100).length, notStarted = real.filter(pending).length, going = real.filter(running).length, est = real.reduce((n, p) => n + (p.plan_total || 0), 0);
     $("stats").hidden = false;
-    $("stats").innerHTML = [["Total projects", projects.length, "folder"], ["Not started", notStarted, "folder"], ["Ongoing", going, "hammer"], ["Completed", done, "check"], ["Total estimated cost", pesoShort(est), "peso"]]
+    $("stats").innerHTML = [["Total projects", real.length, "folder"], ["Not started", notStarted, "folder"], ["Ongoing", going, "hammer"], ["Completed", done, "check"], ["Total estimated cost", pesoShort(est), "peso"]]
       .map(([l, v, ic]) => `<div class="stat"><span class="sico ${ic}" aria-hidden="true"></span><div><small>${l}</small><b>${v}</b></div></div>`).join("");
 
     const items = [];
     projects.forEach(p => {
+      if (isReq(p)) { items.push({ s: 0, p, t: "<b>new project request</b>. Open it to accept or decline" }); return; }
       if (p.progress >= 100) return;
       const days = Math.floor((Date.now() - lastTime(p)) / DAY);
       if (p.budget && p.plan_total && p.plan_total > p.budget) items.push({ s: 0, p, t: `estimate is <b>${peso(p.plan_total - p.budget)}</b> over the budget` });
@@ -79,7 +81,7 @@
       ? shown.map(i => `<li><a href="${link(i.p)}"><span class="sev ${sev[i.s]}" aria-hidden="true"></span><span class="at"><b>${esc(i.p.name)}</b> · ${i.t}</span>${chev}</a></li>`).join("") + (items.length > shown.length ? `<li class="more">+ ${items.length - shown.length} more in My projects</li>` : "")
       : `<li class="clear"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>All clear. Nothing needs attention right now.</li>`;
 
-    const rows = [{ n: "Not started", c: notStarted }].concat(BW.STAGES.map(s => ({ n: s.name, c: projects.filter(p => running(p) && BW.stageOf(p.progress) === s).length })));
+    const rows = [{ n: "Not started", c: notStarted }].concat(BW.STAGES.map(s => ({ n: s.name, c: real.filter(p => running(p) && BW.stageOf(p.progress) === s).length })));
     rows.push({ n: "Completed", c: done, d: 1 });
     const mx = Math.max(1, ...rows.map(r => r.c));
     $("stageBars").innerHTML = rows.map(r => `<div class="sb ${r.c ? "" : "zero"}"><span>${esc(r.n)}</span><div class="sbar"><i class="${r.d ? "done" : ""}" style="width:${r.c / mx * 100}%"></i></div><b>${r.c}</b></div>`).join("");
