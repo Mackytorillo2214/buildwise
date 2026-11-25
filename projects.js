@@ -41,7 +41,7 @@
   const card = p => {
     const st = BW.stageOf(p.progress), u = last[p.id], over = p.budget && p.plan_total && p.plan_total > p.budget;
     return `<a class="pcard" href="project.html?id=${encodeURIComponent(p.id)}" aria-label="Open ${esc(p.name)}">
-      <div class="pc-cover">${cover(p)}<span class="pc-pill ${p.progress >= 100 ? "done" : ""}">${isReq(p) ? "Request" : p.link_status === "pending" ? "Waiting to be accepted" : p.progress >= 100 ? "Completed" : BW.isStarted(p) ? esc(st.name) : "Not started"}</span></div>
+      <div class="pc-cover">${cover(p)}<span class="pc-pill ${p.progress >= 100 ? "done" : ""}">${isReq(p) ? "Request" : isDec(p) ? "Declined" : p.link_status === "declined" ? "Declined" : p.link_status === "pending" ? "Waiting to be accepted" : p.progress >= 100 ? "Completed" : BW.isStarted(p) ? esc(st.name) : "Not started"}</span></div>
       <div class="pc-body">
         <h2>${esc(p.name)}</h2>
         <div class="pc-meta"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>${esc(p.location || "No location yet")}</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>${esc(whoOf(p))}</span></div>
@@ -57,16 +57,17 @@
 
   /* ---- Dashboard: overview, what needs attention, latest news. Everything is worked out from real project data. ---- */
   const started = p => BW.isStarted(p), pending = p => !started(p), running = p => started(p) && p.progress < 100;
-  const isReq = p => BW.isRequestForMe(user, p);
+  const isReq = p => BW.isRequestForMe(user, p), isDec = p => BW.isDeclinedByMe(user, p);
   function paintDash() {
     if (!projects.length) { $("stats").hidden = true; $("vDash").querySelector(".dgrid").innerHTML = emptyHTML(); wireEmpty(); return; }
-    const real = projects.filter(p => !isReq(p)), done = real.filter(p => p.progress >= 100).length, notStarted = real.filter(pending).length, going = real.filter(running).length, est = real.reduce((n, p) => n + (p.plan_total || 0), 0);
+    const real = projects.filter(p => !isReq(p) && !isDec(p)), done = real.filter(p => p.progress >= 100).length, notStarted = real.filter(pending).length, going = real.filter(running).length, est = real.reduce((n, p) => n + (p.plan_total || 0), 0);
     $("stats").hidden = false;
     $("stats").innerHTML = [["Total projects", real.length, "folder"], ["Not started", notStarted, "folder"], ["Ongoing", going, "hammer"], ["Completed", done, "check"], ["Total estimated cost", pesoShort(est), "peso"]]
       .map(([l, v, ic]) => `<div class="stat"><span class="sico ${ic}" aria-hidden="true"></span><div><small>${l}</small><b>${v}</b></div></div>`).join("");
 
     const items = [];
     projects.forEach(p => {
+      if (isDec(p)) return;
       if (isReq(p)) { items.push({ s: 0, r: 1, p, t: "<b>new project request</b>. Open it to accept or decline" }); return; }
       if (p.progress >= 100) return;
       const days = Math.floor((Date.now() - lastTime(p)) / DAY);
@@ -97,7 +98,7 @@
     const all = projects.length;
     if (!all) { $("lcount").textContent = ""; $("list").innerHTML = emptyHTML(); wireEmpty(); return; }
     const q = qs.trim().toLowerCase();
-    let rows = projects.filter(p => (flt === "all" || (flt === "done" && p.progress >= 100) || (flt === "ongoing" && running(p)) || (flt === "pending" && pending(p))) &&
+    let rows = projects.filter(p => (flt === "declined" ? isDec(p) : !isDec(p) && (flt === "all" || (flt === "done" && p.progress >= 100) || (flt === "ongoing" && running(p)) || (flt === "pending" && pending(p)))) &&
       (!q || [p.name, p.location, p.client_name, p.client_email && BW.shownName(p.client_email), p.contractor_name].some(x => x && String(x).toLowerCase().includes(q))));
     rows.sort(sortBy === "name" ? (a, b) => a.name.localeCompare(b.name) : sortBy === "progress" ? (a, b) => b.progress - a.progress : sortBy === "activity" ? (a, b) => lastTime(b) - lastTime(a) : (a, b) => b.created_at.localeCompare(a.created_at));
     $("lcount").textContent = rows.length === all ? all + (all === 1 ? " project" : " projects") : "Showing " + rows.length + " of " + all;
