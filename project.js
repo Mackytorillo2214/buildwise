@@ -172,13 +172,16 @@
     } else if (st === "pending") {
       h = `<h3>Waiting for ${esc(other)} to accept</h3><p>${esc(other)} has to accept this project before it links to them. Until then they can't post updates or start work.</p>
         ${!isPro ? `<p class="msg err" id="reqErr" hidden></p><div class="cr-btns">${btn("reqCancel", "Cancel request", "ghost")}</div>` : ""}`;
-    } else if (st === "declined" && mine) {
-      h = `<h3>${esc(other)} declined this project</h3><p>${isPro ? "The client didn't accept it, so it isn't linked to them." : "Pick another contractor below, or keep tracking progress yourself."}</p>`;
+    } else if (st === "declined" && !mine) {
+      h = `<h3>You declined this project</h3><p>It is in your Declined folder. If things change, you can still accept it.</p>
+        <p class="msg err" id="reqErr" hidden></p><div class="cr-btns">${btn("reqYes", "Accept it after all", "go")}</div>`;
+    } else if (st === "declined") {
+      h = `<h3>${esc(other)} declined this project</h3><p>${isPro ? "The client declined it, but they can still accept it later." : "Pick another contractor below, or wait: " + esc(other) + " can still accept it later."}</p>`;
     }
     box.hidden = !h; box.innerHTML = h; if (!h) return;
     const run = fn => async () => { try { await fn(); location.reload(); } catch (e) { const m = $("reqErr"); if (m) { m.textContent = /respond_to_project|link_status/.test(e.message || "") ? "The database needs the project request SQL first. Run project_requests.sql in Supabase." : (e.message || String(e)); m.hidden = false; } } };
     if ($("reqYes")) $("reqYes").onclick = run(() => BW.respondToProject(id, true));
-    if ($("reqNo")) $("reqNo").onclick = run(() => BW.respondToProject(id, false).then(() => { location.href = "projects.html"; throw new Error("redirect"); }).catch(e => { if (e.message !== "redirect") throw e; }));
+    if ($("reqNo")) $("reqNo").onclick = async () => { try { await BW.respondToProject(id, false); location.href = "projects.html#list"; } catch (e) { const m = $("reqErr"); if (m) { m.textContent = /respond_to_project|link_status/.test(e.message || "") ? "The database needs the project request SQL first. Run project_requests.sql in Supabase." : (e.message || String(e)); m.hidden = false; } } };
     if ($("reqCancel")) $("reqCancel").onclick = run(() => BW.connectContractor(id, null));
   })();
   Pay.mount({ project, user, isPro, BW, canManage: canPost, canSend: !isPro, repaint: () => { paintHead(); paintBreakdown(); } });
