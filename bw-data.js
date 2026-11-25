@@ -94,7 +94,7 @@ window.BW = (function () {
   /* ---------- projects ---------- */
   async function listProjects() {
     if (!db) return store().projects.slice().sort((a, b) => b.created_at.localeCompare(a.created_at));
-    const { data, error } = await db.from("projects").select("id,name,location,client_email,client_name,client_id,contractor_id,contractor_name,created_by,progress,budget,plan_total,created_at,updated_at").order("created_at", { ascending: false });
+    const { data, error } = await db.from("projects").select("id,name,location,client_email,client_name,client_id,contractor_id,contractor_name,created_by,link_status,progress,budget,plan_total,created_at,updated_at").order("created_at", { ascending: false });
     if (error) throw error; return data;
   }
   async function lastUpdates() {   // latest update per project, for the list cards
@@ -103,15 +103,16 @@ window.BW = (function () {
     if (error) throw error; const m = {}; data.forEach(u => { if (!m[u.project_id]) m[u.project_id] = u; }); return m;
   }
   async function createProject(user, { name, location, client, contractor }) {
-    const row = { name, location: location || null, progress: 0 };
-    if (user.role === "contractor") Object.assign(row, { contractor_id: user.id, contractor_name: user.name, client_email: toEmail(client) });
-    else Object.assign(row, { client_id: user.id, client_name: user.name, client_email: (user.email || "").toLowerCase(), contractor_id: contractor ? contractor.id : null, contractor_name: contractor ? contractor.full_name : null });
+    const row = { name, location: location || null, progress: 0, link_status: "accepted" };
+    /* naming the other side sends them a request; they must accept before the project links to them */
+    if (user.role === "contractor") Object.assign(row, { contractor_id: user.id, contractor_name: user.name, client_email: toEmail(client), link_status: toEmail(client) ? "pending" : "accepted" });
+    else Object.assign(row, { client_id: user.id, client_name: user.name, client_email: (user.email || "").toLowerCase(), contractor_id: contractor ? contractor.id : null, contractor_name: contractor ? contractor.full_name : null, link_status: contractor ? "pending" : "accepted" });
     if (!db) { const d = store(); const p = Object.assign({ id: uid(), created_by: user.id, created_at: new Date().toISOString() }, row); d.projects.push(p); save(d); return p; }
     const { data, error } = await db.from("projects").insert(Object.assign({ created_by: user.id }, row)).select().single();
     if (error) throw error; return data;
   }
   async function connectContractor(id, contractor) {
-    const patch = { contractor_id: contractor ? contractor.id : null, contractor_name: contractor ? contractor.full_name : null, updated_at: new Date().toISOString() };
+    const patch = { contractor_id: contractor ? contractor.id : null, contractor_name: contractor ? contractor.full_name : null, link_status: contractor ? "pending" : "accepted", updated_at: new Date().toISOString() };
     if (!db) { const d = store(); const p = d.projects.find(x => x.id === id); if (p) Object.assign(p, patch); save(d); return; }
     const { error } = await db.from("projects").update(patch).eq("id", id); if (error) throw error;
   }
@@ -139,11 +140,23 @@ window.BW = (function () {
   /* who may do what on a project */
   const ownerOf = p => p.created_by || p.contractor_id || "preview-contractor";
   const isOwner = (user, p) => ownerOf(p) === user.id;
-  const canPost = (user, p) => p.contractor_id ? p.contractor_id === user.id : ownerOf(p) === user.id;
+  /* a project linked to the other side stays "pending" until they accept (older projects have no status and count as accepted) */
+  const linkPending = p => p.link_status === "pending";
+  const isRequestForMe = (user, p) => linkPending(p) && !isOwner(user, p);
+  async function respondToProject(id, accept) {
+    if (!db) {
+      const d = store(); const p = d.projects.find(x => x.id === id); if (!p || p.link_status !== "pending") return;
+      if (accept) p.link_status = "accepted";
+      else { p.link_status = "declined"; if (p.created_by === p.contractor_id) p.client_email = null; else p.contractor_id = null; }
+      save(d); return;
+    }
+    const { error } = await db.rpc("respond_to_project", { pid: id, accept }); if (error) throw error;
+  }
+  const canPost = (user, p) => !linkPending(p) && (p.contractor_id ? p.contractor_id === user.id : ownerOf(p) === user.id);
 
   /* once work has started with a contractor connected, the client's plan edits become change requests */
   const isStarted = p => !!(p.started_at || (p.progress || 0) > 0);
-  const planLocked = (user, p) => !!(p.contractor_id && p.contractor_id !== user.id && isOwner(user, p) && isStarted(p));
+  const planLocked = (user, p) => !!(!linkPending(p) && p.contractor_id && p.contractor_id !== user.id && isOwner(user, p) && isStarted(p));
 
   /* ---------- change requests ---------- */
   async function listChangeRequests(id) {
@@ -251,5 +264,5 @@ window.BW = (function () {
     return data;
   }
 
-  return { db, configured: !!db, STAGES, stageOf, shownName, me, proLabel, saveProfile, signOut, listProjects, lastUpdates, createProject, uploadReference, uploadUpdatePhoto, referenceUrl, connectContractor, searchContractors, contractorProfile, isStarted, planLocked, listChangeRequests, sendChangeRequest, cancelChangeRequest, decideChangeRequest, isOwner, canPost, searchClients, getProject, savePlan, deleteProject, listUpdates, addUpdate, updateProject };
+  return { db, configured: !!db, STAGES, stageOf, shownName, me, proLabel, saveProfile, signOut, listProjects, lastUpdates, createProject, uploadReference, uploadUpdatePhoto, referenceUrl, connectContractor, searchContractors, contractorProfile, linkPending, isRequestForMe, respondToProject, isStarted, planLocked, listChangeRequests, sendChangeRequest, cancelChangeRequest, decideChangeRequest, isOwner, canPost, searchClients, getProject, savePlan, deleteProject, listUpdates, addUpdate, updateProject };
 })();
