@@ -67,7 +67,7 @@
 
     const items = [];
     projects.forEach(p => {
-      if (isReq(p)) { items.push({ s: 0, p, t: "<b>new project request</b>. Open it to accept or decline" }); return; }
+      if (isReq(p)) { items.push({ s: 0, r: 1, p, t: "<b>new project request</b>. Open it to accept or decline" }); return; }
       if (p.progress >= 100) return;
       const days = Math.floor((Date.now() - lastTime(p)) / DAY);
       if (p.budget && p.plan_total && p.plan_total > p.budget) items.push({ s: 0, p, t: `estimate is <b>${peso(p.plan_total - p.budget)}</b> over the budget` });
@@ -75,7 +75,7 @@
       if (isPro ? !p.client_email : !p.contractor_name) items.push({ s: 2, p, t: isPro ? "no client linked yet" : "no contractor connected yet" });
       if (!p.plan_total) items.push({ s: 2, p, t: "no house plan saved yet" });
     });
-    items.sort((a, b) => a.s - b.s);
+    items.sort((a, b) => (a.s - b.s) || ((b.r || 0) - (a.r || 0)));
     const sev = ["red", "amber", "blue"], shown = items.slice(0, 6);
     $("attnList").innerHTML = shown.length
       ? shown.map(i => `<li><a href="${link(i.p)}"><span class="sev ${sev[i.s]}" aria-hidden="true"></span><span class="at"><b>${esc(i.p.name)}</b> · ${i.t}</span>${chev}</a></li>`).join("") + (items.length > shown.length ? `<li class="more">+ ${items.length - shown.length} more in My projects</li>` : "")
